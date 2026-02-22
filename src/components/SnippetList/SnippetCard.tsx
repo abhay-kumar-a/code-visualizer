@@ -1,6 +1,6 @@
 import { Link } from 'react-router-dom'
 import Tag from '../common/Tag'
-import type { Snippet } from '../../utils/storage'
+import type { Snippet } from '../../utils/firebaseStorage'
 
 interface SnippetCardProps {
   snippet: Snippet
@@ -67,7 +67,7 @@ function SnippetCard({ snippet, onDelete, onEdit }: SnippetCardProps) {
       )}
 
       <div className="mt-3 text-xs text-slate-500">
-        Updated: {new Date(snippet.updatedAt).toLocaleDateString()}
+        Updated: {snippet.updatedAt?.toLocaleDateString?.() || 'N/A'}
       </div>
     </div>
   )

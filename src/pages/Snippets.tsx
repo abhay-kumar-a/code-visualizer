@@ -1,21 +1,36 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import Modal from '../components/common/Modal'
 import SnippetCard from '../components/SnippetList/SnippetCard'
 import SnippetForm from '../components/SnippetList/SnippetForm'
-import { getSnippets, saveSnippet, deleteSnippet, updateSnippet, type Snippet } from '../utils/storage'
+import { getSnippets, saveSnippet, deleteSnippet, updateSnippet, isUsingFirebase, type Snippet } from '../utils/firebaseStorage'
 
 function Snippets() {
-  const [snippets, setSnippets] = useState<Snippet[]>(() => getSnippets())
+  const [snippets, setSnippets] = useState<Snippet[]>([])
+  const [loading, setLoading] = useState(true)
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [editingSnippet, setEditingSnippet] = useState<Snippet | null>(null)
 
-  const handleSaveSnippet = (data: Omit<Snippet, 'id' | 'createdAt' | 'updatedAt'>) => {
-    if (editingSnippet) {
-      updateSnippet(editingSnippet.id, data)
-    } else {
-      saveSnippet(data)
+  useEffect(() => {
+    loadSnippets()
+  }, [])
+
+  const loadSnippets = async () => {
+    try {
+      setLoading(true)
+      const data = await getSnippets()
+      setSnippets(data)
+    } finally {
+      setLoading(false)
     }
-    setSnippets(getSnippets())
+  }
+
+  const handleSaveSnippet = async (data: Omit<Snippet, 'id' | 'createdAt' | 'updatedAt'>) => {
+    if (editingSnippet) {
+      await updateSnippet(editingSnippet.id, data)
+    } else {
+      await saveSnippet(data)
+    }
+    await loadSnippets()
     closeModal()
   }
 
@@ -24,10 +39,10 @@ function Snippets() {
     setIsModalOpen(true)
   }
 
-  const handleDeleteSnippet = (id: string) => {
+  const handleDeleteSnippet = async (id: string) => {
     if (window.confirm('Are you sure you want to delete this snippet?')) {
-      deleteSnippet(id)
-      setSnippets(getSnippets())
+      await deleteSnippet(id)
+      await loadSnippets()
     }
   }
 
@@ -41,12 +56,28 @@ function Snippets() {
     setEditingSnippet(null)
   }
 
+  const usingFirebase = isUsingFirebase()
+
+  if (loading) {
+    return (
+      <div className="max-w-4xl mx-auto text-center py-12">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto"></div>
+        <p className="text-slate-400 mt-4">Loading snippets...</p>
+      </div>
+    )
+  }
+
   return (
     <div className="max-w-4xl mx-auto">
-      <div className="flex justify-between items-center mb-6">
+      <div className="flex justify-between items-center mb-4">
         <div>
           <h1 className="text-3xl font-bold text-white">Code Snippets</h1>
-          <p className="text-slate-400 mt-1">Manage your code snippets</p>
+          <p className="text-slate-400 mt-1">
+            Manage your code snippets
+            <span className={`ml-2 px-2 py-1 rounded text-xs ${usingFirebase ? 'bg-green-600' : 'bg-yellow-600'}`}>
+              {usingFirebase ? 'Cloud Sync' : 'Local Storage'}
+            </span>
+          </p>
         </div>
         <button
           onClick={openModal}
@@ -58,6 +89,17 @@ function Snippets() {
           New Snippet
         </button>
       </div>
+
+      {!usingFirebase && (
+        <div className="mb-4 p-3 bg-yellow-900/30 border border-yellow-600 rounded-lg">
+          <p className="text-yellow-400 text-sm">
+            Firebase not configured. Using browser localStorage.
+            <a href="https://console.firebase.google.com" target="_blank" rel="noopener noreferrer" className="ml-2 underline hover:text-yellow-300">
+              Setup Firebase
+            </a> for cloud sync.
+          </p>
+        </div>
+      )}
 
       {snippets.length === 0 ? (
         <div className="text-center py-16 bg-slate-700 rounded-lg">

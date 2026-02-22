@@ -1,13 +1,41 @@
+import { useState, useEffect } from 'react'
 import { useParams, Link, useNavigate } from 'react-router-dom'
 import Tag from '../components/common/Tag'
 import Button from '../components/common/Button'
-import { getSnippets, deleteSnippet } from '../utils/storage'
+import { getSnippets, deleteSnippet, type Snippet } from '../utils/firebaseStorage'
 
 function SnippetDetailPage() {
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
-  const snippets = getSnippets()
-  const snippet = snippets.find((s) => s.id === id)
+  const [snippet, setSnippet] = useState<Snippet | null>(null)
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    loadSnippet()
+  }, [id])
+
+  const loadSnippet = async () => {
+    const snippets = await getSnippets()
+    const found = snippets.find((s) => s.id === id)
+    setSnippet(found || null)
+    setLoading(false)
+  }
+
+  const handleDelete = async () => {
+    if (!snippet) return
+    if (window.confirm('Are you sure you want to delete this snippet?')) {
+      await deleteSnippet(snippet.id)
+      navigate('/snippets')
+    }
+  }
+
+  if (loading) {
+    return (
+      <div className="max-w-4xl mx-auto text-center py-12">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto"></div>
+      </div>
+    )
+  }
 
   if (!snippet) {
     return (
@@ -18,13 +46,6 @@ function SnippetDetailPage() {
         </Link>
       </div>
     )
-  }
-
-  const handleDelete = () => {
-    if (window.confirm('Are you sure you want to delete this snippet?')) {
-      deleteSnippet(snippet.id)
-      navigate('/snippets')
-    }
   }
 
   return (
@@ -45,10 +66,10 @@ function SnippetDetailPage() {
                 {snippet.language}
               </span>
               <span className="text-slate-500 text-sm">
-                Created: {new Date(snippet.createdAt).toLocaleDateString()}
+                Created: {snippet.createdAt?.toLocaleDateString?.() || 'N/A'}
               </span>
               <span className="text-slate-500 text-sm">
-                Updated: {new Date(snippet.updatedAt).toLocaleDateString()}
+                Updated: {snippet.updatedAt?.toLocaleDateString?.() || 'N/A'}
               </span>
             </div>
           </div>

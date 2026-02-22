@@ -1,19 +1,61 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useParams, Link, useNavigate } from 'react-router-dom'
 import Button from '../components/common/Button'
-import { getSnippets, updateSnippet } from '../utils/storage'
+import { getSnippets, updateSnippet, type Snippet } from '../utils/firebaseStorage'
 
 function EditSnippetPage() {
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
-  const snippets = getSnippets()
-  const snippet = snippets.find((s) => s.id === id)
+  const [snippet, setSnippet] = useState<Snippet | null>(null)
+  const [loading, setLoading] = useState(true)
 
-  const [title, setTitle] = useState(snippet?.title || '')
-  const [code, setCode] = useState(snippet?.code || '')
-  const [language, setLanguage] = useState(snippet?.language || 'javascript')
-  const [tags, setTags] = useState(snippet?.tags.join(', ') || '')
-  const [notes, setNotes] = useState(snippet?.notes || '')
+  const [title, setTitle] = useState('')
+  const [code, setCode] = useState('')
+  const [language, setLanguage] = useState('javascript')
+  const [tags, setTags] = useState('')
+  const [notes, setNotes] = useState('')
+  const [saving, setSaving] = useState(false)
+
+  useEffect(() => {
+    loadSnippet()
+  }, [id])
+
+  const loadSnippet = async () => {
+    const snippets = await getSnippets()
+    const found = snippets.find((s) => s.id === id)
+    if (found) {
+      setSnippet(found)
+      setTitle(found.title)
+      setCode(found.code)
+      setLanguage(found.language)
+      setTags(found.tags.join(', '))
+      setNotes(found.notes)
+    }
+    setLoading(false)
+  }
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!snippet) return
+    
+    setSaving(true)
+    await updateSnippet(snippet.id, {
+      title,
+      code,
+      language,
+      tags: tags.split(',').map(t => t.trim()).filter(Boolean),
+      notes,
+    })
+    navigate(`/snippets/${snippet.id}`)
+  }
+
+  if (loading) {
+    return (
+      <div className="max-w-4xl mx-auto text-center py-12">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto"></div>
+      </div>
+    )
+  }
 
   if (!snippet) {
     return (
@@ -24,18 +66,6 @@ function EditSnippetPage() {
         </Link>
       </div>
     )
-  }
-
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault()
-    updateSnippet(snippet.id, {
-      title,
-      code,
-      language,
-      tags: tags.split(',').map(t => t.trim()).filter(Boolean),
-      notes,
-    })
-    navigate(`/snippets/${snippet.id}`)
   }
 
   return (
@@ -112,7 +142,9 @@ function EditSnippetPage() {
           </div>
 
           <div className="flex gap-3 pt-4">
-            <Button type="submit">Save Changes</Button>
+            <Button type="submit" disabled={saving}>
+              {saving ? 'Saving...' : 'Save Changes'}
+            </Button>
             <Link to={`/snippets/${snippet.id}`}>
               <Button type="button" variant="secondary">Cancel</Button>
             </Link>

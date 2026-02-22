@@ -1,0 +1,94 @@
+{
+  "problems": [
+    {
+      "id": "1",
+      "title": "Two Sum",
+      "difficulty": "Easy",
+      "category": "Array",
+      "description": "Given an array of integers nums and an integer target, return indices of the two numbers such that they add up to target.",
+      "examples": [
+        {
+          "input": "nums = [2,7,11,15], target = 9",
+          "output": "[0,1]",
+          "explanation": "Because nums[0] + nums[1] == 9, we return [0, 1]."
+        }
+      ],
+      "solution": "function twoSum(nums, target) {\n  const map = new Map();\n  for (let i = 0; i < nums.length; i++) {\n    const complement = target - nums[i];\n    if (map.has(complement)) {\n      return [map.get(complement), i];\n    }\n    map.set(nums[i], i);\n  }\n  return [];\n}",
+      "timeComplexity": "O(n)",
+      "spaceComplexity": "O(n)",
+      "tags": ["hash-table", "array"]
+    },
+    {
+      "id": "2",
+      "title": "Binary Search",
+      "difficulty": "Easy",
+      "category": "Searching",
+      "description": "Given a sorted array of integers and a target value, return the index if the target is found. If not, return -1.",
+      "examples": [
+        {
+          "input": "nums = [-1,0,3,5,9,12], target = 9",
+          "output": "4",
+          "explanation": "9 exists in nums and its index is 4"
+        }
+      ],
+      "solution": "function binarySearch(nums, target) {\n  let left = 0, right = nums.length - 1;\n  while (left <= right) {\n    const mid = Math.floor((left + right) / 2);\n    if (nums[mid] === target) return mid;\n    if (nums[mid] < target) left = mid + 1;\n    else right = mid - 1;\n  }\n  return -1;\n}",
+      "timeComplexity": "O(log n)",
+      "spaceComplexity": "O(1)",
+      "tags": ["binary-search", "array"]
+    },
+    {
+      "id": "3",
+      "title": "Maximum Subarray",
+      "difficulty": "Medium",
+      "category": "Dynamic Programming",
+      "description": "Given an integer array nums, find the subarray with the largest sum, and return its sum.",
+      "examples": [
+        {
+          "input": "nums = [-2,1,-3,4,-1,2,1,-5,4]",
+          "output": "6",
+          "explanation": "The subarray [4,-1,2,1] has the largest sum 6."
+        }
+      ],
+      "solution": "function maxSubArray(nums) {\n  let maxSum = nums[0];\n  let currentSum = nums[0];\n  for (let i = 1; i < nums.length; i++) {\n    currentSum = Math.max(nums[i], currentSum + nums[i]);\n    maxSum = Math.max(maxSum, currentSum);\n  }\n  return maxSum;\n}",
+      "timeComplexity": "O(n)",
+      "spaceComplexity": "O(1)",
+      "tags": ["dynamic-programming", "array", "divide-and-conquer"]
+    },
+    {
+      "id": "4",
+      "title": "Merge Two Sorted Lists",
+      "difficulty": "Easy",
+      "category": "Linked List",
+      "description": "Merge two sorted linked lists and return it as a new sorted list.",
+      "examples": [
+        {
+          "input": "l1 = [1,2,4], l2 = [1,3,4]",
+          "output": "[1,1,2,3,4,4]",
+          "explanation": "Merged in order"
+        }
+      ],
+      "solution": "function mergeTwoLists(l1, l2) {\n  if (!l1) return l2;\n  if (!l2) return l1;\n  if (l1.val < l2.val) {\n    l1.next = mergeTwoLists(l1.next, l2);\n    return l1;\n  } else {\n    l2.next = mergeTwoLists(l1, l2.next);\n    return l2;\n  }\n}",
+      "timeComplexity": "O(n + m)",
+      "spaceComplexity": "O(n + m)",
+      "tags": ["linked-list", "recursion"]
+    },
+    {
+      "id": "5",
+      "title": "Valid Parentheses",
+      "difficulty": "Easy",
+      "category": "Stack",
+      "description": "Given a string s containing just the characters '(', ')', '{', '}', '[' and ']', determine if the input string is valid.",
+      "examples": [
+        {
+          "input": "s = \"()[]{}\"",
+          "output": "true",
+          "explanation": "All brackets are properly closed"
+        }
+      ],
+      "solution": "function isValid(s) {\n  const stack = [];\n  const map = { ')': '(', '}': '{', ']': '[' };\n  for (const char of s) {\n    if (map[char]) {\n      if (stack.pop() !== map[char]) return false;\n    } else {\n      stack.push(char);\n    }\n  }\n  return stack.length === 0;\n}",
+      "timeComplexity": "O(n)",
+      "spaceComplexity": "O(n)",
+      "tags": ["stack", "string"]
+    }
+  ]
+}
